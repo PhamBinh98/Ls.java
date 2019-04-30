@@ -3,16 +3,17 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 public class Ls {
-    private List<File> Flag;
+    private List<File> Work;
 
     Ls(File file) {
-        Flag = new ArrayList<>();
+        Work = new ArrayList<>();
         File[] list = file.listFiles();
         if (file.isDirectory()) {
             if (list == null) throw new AssertionError();
-            Collections.addAll(this.Flag, list);
-        } else if (file.isFile()) this.Flag.add(file);
-        Collections.sort(Flag);
+            Collections.addAll(this.Work, list);
+
+        } else if (file.isFile()) this.Work.add(file);
+        Collections.sort(Work);
     }
 
     private String isRWX(File file) {
@@ -54,7 +55,7 @@ public class Ls {
         long s = 0;
         if (file.isFile()) s = file.length();
         else {
-                for (File b : file.listFiles()) {
+            for (File b : file.listFiles()) {
                 if (file.isFile()) s += b.length();
                 else s += size(b);
             }
@@ -66,7 +67,7 @@ public class Ls {
         List<String> res = new ArrayList<>();
         String pattern = "dd.MM.yyyy HH:mm:ss";
         SimpleDateFormat sim = new SimpleDateFormat(pattern);
-        for (File i : Flag) {
+        for (File i : Work) {
             StringBuilder s = new StringBuilder();
             Formatter fmt = new Formatter(s);
             s.append(i.getName());
@@ -74,17 +75,22 @@ public class Ls {
                 fmt.format(" " + isRWX(i) + "%8s " + sim.format(i.lastModified()), addHumanReadableLength(size(i)));
             } else if (l) {
                 fmt.format(" " + rwxToBit(i) + "%12s " + sim.format(i.lastModified()), size(i));
-            }
+
+            } else if (h) fmt.format(" " + isRWX(i) + " " + addHumanReadableLength(size(i)));
+
+            else fmt.format(" " + isRWX(i) + " " + size(i));
+
             res.add(s.toString());
         }
+
         if (r) Collections.reverse(res);
+
         return res;
     }
 
 
     void output(String o, List<String> list) throws IOException {
         PrintStream out;
-        int n = list.size();
         if (o == null)
             out = System.out;
         else {
